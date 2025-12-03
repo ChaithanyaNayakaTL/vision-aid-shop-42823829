@@ -1,21 +1,39 @@
 'use client'
 
-import { useState, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
+import { Suspense, lazy } from 'react';
+import type { Application } from '@splinetool/runtime';
+const Spline = lazy(() => import('@splinetool/react-spline'));
 import { Card } from "@/components/ui/card";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Button } from "@/components/ui/button";
 import { Camera, Mic, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { RobotScene } from "@/components/3d/RobotScene";
 
 export function SplineHero() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const splineRef = useRef<Application | null>(null);
+
+  const onLoad = useCallback((splineApp: Application) => {
+    splineRef.current = splineApp;
+  }, []);
 
   const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!splineRef.current) return;
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-    setMousePosition({ x, y });
+    
+    // Try to find and rotate the robot based on cursor
+    try {
+      const robot = splineRef.current.findObjectByName('Robot');
+      if (robot && 'rotation' in robot) {
+        (robot as { rotation: { x: number; y: number } }).rotation.y = x * 0.3;
+        (robot as { rotation: { x: number; y: number } }).rotation.x = -y * 0.15;
+      }
+    } catch {
+      // Spline object interaction not available for this scene
+    }
   }, []);
 
   return (
@@ -81,7 +99,7 @@ export function SplineHero() {
           </div>
         </div>
 
-        {/* Right content - 3D Robot Scene */}
+        {/* Right content - 3D Scene */}
         <div className="flex-1 relative min-h-[280px] md:min-h-0">
           <div 
             className="absolute inset-0 rounded-2xl overflow-hidden"
@@ -89,7 +107,22 @@ export function SplineHero() {
               background: 'linear-gradient(135deg, hsl(180 25% 94% / 0.5) 0%, transparent 50%)',
             }}
           />
-          <RobotScene mousePosition={mousePosition} />
+          <Suspense 
+            fallback={
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="relative">
+                  <div className="h-12 w-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                  <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse" />
+                </div>
+              </div>
+            }
+          >
+            <Spline
+              scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+              className="w-full h-full"
+              onLoad={onLoad}
+            />
+          </Suspense>
         </div>
       </div>
     </Card>
