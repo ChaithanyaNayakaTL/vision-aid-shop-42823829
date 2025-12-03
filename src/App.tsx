@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import { Navigation } from "@/components/layout/Navigation";
 import Index from "./pages/Index";
+import Scan from "./pages/Scan";
 import Cart from "./pages/Cart";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
@@ -31,11 +32,12 @@ const App = () => (
           }}
         />
         <BrowserRouter>
-          <div className="flex min-h-screen flex-col">
+          <div className="flex min-h-screen flex-col overflow-x-hidden">
             <Navigation />
             <div className="flex-1">
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/scan" element={<Scan />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
