@@ -60,9 +60,20 @@ export function CameraView() {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+      // Wait for video element to be available
+      const videoElement = videoRef.current;
+      if (videoElement) {
+        videoElement.srcObject = stream;
+        
+        // Wait for video to be ready to play
+        await new Promise<void>((resolve, reject) => {
+          videoElement.onloadedmetadata = () => {
+            videoElement.play()
+              .then(() => resolve())
+              .catch(reject);
+          };
+          videoElement.onerror = () => reject(new Error('Video element error'));
+        });
       }
 
       // Check torch capability
@@ -171,6 +182,7 @@ export function CameraView() {
             <video
               ref={videoRef}
               className="h-full w-full object-cover"
+              autoPlay
               playsInline
               muted
               aria-hidden="true"
